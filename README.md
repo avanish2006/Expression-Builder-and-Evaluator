@@ -38,7 +38,7 @@ Clone this repository:
 bash
 Copy
 Edit
-git clone https://github.com/avanish2006/Expression-Builder-and-Evaluator.git
+git clone https://github.com/avanish2006/Expression-Builder-and-Evaluator.git 
 Open the index.html file in any modern web browser.
 
 🎯 Example Output
