@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Expression Tree Builder & Evaluator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(-45deg, #e0f7fa, #fce4ec, #3ca5d6, #ffecb3);
+            background-size: 400% 400%;
+            animation: backgroundShift 12s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        @keyframes backgroundShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background: #ffffffcc;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 700px;
+            width: 90%;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+        }
+
+        h2 {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+
+        input {
+            width: 75%;
+            padding: 14px;
+            margin-bottom: 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: #4caf50;
+            box-shadow: 0 0 10px #4caf50aa;
+            outline: none;
+        }
+
+        button {
+            padding: 14px 30px;
+            background: linear-gradient(90deg, #44d9c5, #43a047);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: linear-gradient(90deg, #00796b, #2e7d32);
+            transform: translateY(-2px);
+        }
+
+        .result {
+            margin-top: 30px;
+            text-align: left;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease;
+        }
+
+        .result.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        h3 {
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        p {
+            font-size: 18px;
+            color: #333;
+            word-break: break-word;
+        }
+
+        .error {
+            color: #d32f2f;
+            font-weight: 600;
+            margin-top: 10px;
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>🌳 Expression Tree Builder & Evaluator</h2>
+    <input type="text" id="postfixInput" placeholder="e.g., 3 4 5 * + 6 -">
+    <br>
+    <button onclick="buildAndEvaluate()">Build & Evaluate</button>
+
+    <div class="error" id="errorMsg"></div>
+
+    <div class="result" id="resultSection">
+        <h3>📜 In-Order Expression:</h3>
+        <p id="inorderResult"></p>
+
+        <h3>✅ Evaluated Result:</h3>
+        <p id="evaluationResult"></p>
+    </div>
+</div>
+<script>
+    class Node {
+        constructor(value) {
+            this.value = value;
+            this.left = null;
+            this.right = null;
+        }
+    }
+
+    function isOperator(token) {
+        return ["+", "-", "*", "/"].includes(token);
+    }
+
+    function buildExpressionTree(tokens) {
+        const stack = [];
+        tokens.forEach(token => {
+            if (!isOperator(token)) {
+                stack.push(new Node(token));
+            } else {
+                const node = new Node(token);
+                node.right = stack.pop();
+                node.left = stack.pop();
+                stack.push(node);
+            }
+        });
+        return stack.pop();
+    }
+
+    function inorderTraversal(node) {
+        if (!node) return "";
+        if (!node.left && !node.right) return node.value;
+        return `(${inorderTraversal(node.left)} ${node.value} ${inorderTraversal(node.right)})`;
+    }
+
+    function evaluateTree(node) {
+        if (!node.left && !node.right) return parseFloat(node.value);
+        const l = evaluateTree(node.left), r = evaluateTree(node.right);
+        switch (node.value) {
+            case '+': return l + r;
+            case '-': return l - r;
+            case '*': return l * r;
+            case '/': return l / r;
+            default: return NaN;
+        }
+    }
+
+    function buildAndEvaluate() {
+        const input = document.getElementById('postfixInput').value.trim();
+        const errorMsg = document.getElementById('errorMsg');
+        const resultSection = document.getElementById('resultSection');
+        errorMsg.textContent = "";
+        resultSection.classList.remove('show');
+
+        if (!input) {
+            errorMsg.textContent = "⚠ Please enter a postfix expression!";
+            return;
+        }
+
+        try {
+            const tokens = input.split(" ").filter(t => t);
+            const root = buildExpressionTree(tokens);
+            document.getElementById('inorderResult').textContent = inorderTraversal(root);
+            document.getElementById('evaluationResult').textContent = evaluateTree(root);
+            setTimeout(() => resultSection.classList.add('show'), 150);
+        } catch {
+            errorMsg.textContent = "⚠ Invalid postfix expression!";
+            document.getElementById('inorderResult').textContent = "";
+            document.getElementById('evaluationResult').textContent = "";
+        }
+    }
+</script>
+</body>
+</html>
